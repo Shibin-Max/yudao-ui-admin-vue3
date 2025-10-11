@@ -13,30 +13,13 @@ const chartRef = ref<HTMLDivElement>()
 let chartInstance: echarts.ECharts | null = null
 
 // 获取最近 N 天的日期范围
-const getRecentDateRange = (days: number): { startDate: string; endDate: string } => {
+const getRecentDateRange = (days: number): ChartQueryParams => {
   const end = new Date()
   const start = new Date()
   start.setDate(end.getDate() - (days - 1))
   return {
     startDate: start.toISOString().slice(0, 10),
     endDate: end.toISOString().slice(0, 10)
-  }
-}
-
-// 转换后端数据为图表格式
-const transformChartData = (raw: {
-  date: string[]
-  statusSeries: Record<string, number[]>
-}): {
-  categories: string[]
-  series: { name: string; data: number[] }[]
-} => {
-  return {
-    categories: raw.date,
-    series: Object.entries(raw.statusSeries).map(([name, data]) => ({
-      name,
-      data
-    }))
   }
 }
 
@@ -47,8 +30,8 @@ const initChart = () => {
   }
 }
 
-// 渲染图表数据
-const renderChart = (data: { categories: string[]; series: { name: string; data: number[] }[] }) => {
+// 渲染图表
+const renderChart = (data: { categories: string[]; series: echarts.SeriesOption[] }) => {
   if (!chartInstance) return
 
   const emphasisStyle = {
@@ -59,13 +42,13 @@ const renderChart = (data: { categories: string[]; series: { name: string; data:
   }
 
   const option: echarts.EChartsOption = {
-    title: { text: '每日状态分布图' },
+    title: { text: 'Daily Status Distribution' },
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' }
     },
     legend: {
-      data: data.series.map(s => s.name),
+      data: data.series.map(s => s.name as string),
       left: '10%'
     },
     brush: {
@@ -81,7 +64,7 @@ const renderChart = (data: { categories: string[]; series: { name: string; data:
     xAxis: {
       type: 'category',
       data: data.categories,
-      name: '日期',
+      name: 'Date',
       axisLabel: {
         rotate: 45,
         formatter: (val: string) => val.slice(5) // 显示 MM-DD
@@ -93,11 +76,10 @@ const renderChart = (data: { categories: string[]; series: { name: string; data:
     yAxis: {},
     grid: { bottom: 100 },
     series: data.series.map(s => ({
-      name: s.name,
+      ...s,
       type: 'bar',
-      stack: '状态',
-      emphasis: emphasisStyle,
-      data: s.data
+      stack: 'status',
+      emphasis: emphasisStyle
     }))
   }
 
@@ -108,25 +90,25 @@ const renderChart = (data: { categories: string[]; series: { name: string; data:
     const brushComponent = params.batch[0]
     for (let sIdx = 0; sIdx < brushComponent.selected.length; sIdx++) {
       const rawIndices = brushComponent.selected[sIdx].dataIndex
-      brushed.push(`[系列 ${sIdx}] ${rawIndices.join(', ')}`)
+      brushed.push(`[Series ${sIdx}] ${rawIndices.join(', ')}`)
     }
+    console.log('Selected indices:', brushed.join('\n'))
   })
 }
 
 // 获取图表数据并渲染
 const fetchChartData = async () => {
-  const query: ChartQueryParams = getRecentDateRange(31)
+  const query = getRecentDateRange(31)
 
   try {
     const res = await StatisticsDataApi.getChartData(query)
-    if (res?.date && res?.statusSeries) {
-      const chartData = transformChartData(res)
-      renderChart(chartData)
+    if (res?.categories && res?.series) {
+      renderChart(res)
     } else {
-      console.warn('数据结构异常:', res)
+      console.warn('Unexpected response structure:', res)
     }
   } catch (err) {
-    console.error('请求异常:', err)
+    console.error('Request failed:', err)
   }
 }
 
