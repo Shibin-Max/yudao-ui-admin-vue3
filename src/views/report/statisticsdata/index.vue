@@ -98,7 +98,7 @@ const renderChart = (data: { categories: string[]; series: echarts.SeriesOption[
 
 // 获取图表数据并渲染
 const fetchChartData = async () => {
-  const query = getRecentDateRange(31)
+  const query = getRecentDateRange(7)
 
   try {
     const res = await StatisticsDataApi.getChartData(query)
