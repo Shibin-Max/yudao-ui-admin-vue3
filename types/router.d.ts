@@ -21,6 +21,8 @@ import { defineComponent } from 'vue'
 
     noCache: true             如果设置为true，则不会被 <keep-alive> 缓存(默认 false)
 
+    viewKey: 'view-name'      设置稳定的页面实例标识，路由地址变化时复用同一个组件实例
+
     breadcrumb: false         如果设置为false，则不会在breadcrumb面包屑中显示(默认 true)
 
     affix: true               如果设置为true，则会一直固定在tag项中(默认 false)
@@ -42,12 +44,18 @@ declare module 'vue-router' {
     titleSuffix?: string
     icon?: string
     noCache?: boolean
+    viewKey?: string
     breadcrumb?: boolean
     affix?: boolean
     activeMenu?: string
     noTagsView?: boolean
     followAuth?: string
     canTo?: boolean
+    hash?: string
+    iframeSrc?: string
+    link?: string
+    params?: Recordable
+    query?: Recordable
   }
 }
 
@@ -73,6 +81,7 @@ declare global {
     meta: RouteMeta
     component: string
     componentName?: string
+    id?: number | string
     path: string
     redirect: string
     children?: AppCustomRouteRecordRaw[]

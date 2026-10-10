@@ -8,53 +8,52 @@ export const defaultShortcuts = [
   {
     text: '今天',
     value: () => {
-      return new Date()
+      const date = dayjs()
+      return [date.startOf('day').toDate(), date.endOf('day').toDate()]
     }
   },
   {
     text: '昨天',
     value: () => {
-      const date = new Date()
-      date.setTime(date.getTime() - 3600 * 1000 * 24)
-      return [date, date]
+      const date = dayjs().subtract(1, 'day')
+      return [date.startOf('day').toDate(), date.endOf('day').toDate()]
     }
   },
   {
     text: '最近七天',
     value: () => {
-      const date = new Date()
-      date.setTime(date.getTime() - 3600 * 1000 * 24 * 7)
-      return [date, new Date()]
+      const date = dayjs()
+      // 包含今天在内，共 7 个自然日
+      return [date.subtract(6, 'day').startOf('day').toDate(), date.endOf('day').toDate()]
     }
   },
   {
     text: '最近 30 天',
     value: () => {
-      const date = new Date()
-      date.setTime(date.getTime() - 3600 * 1000 * 24 * 30)
-      return [date, new Date()]
+      const date = dayjs()
+      // 包含今天在内，共 30 个自然日
+      return [date.subtract(29, 'day').startOf('day').toDate(), date.endOf('day').toDate()]
     }
   },
   {
     text: '本月',
     value: () => {
-      const date = new Date()
-      date.setDate(1) // 设置为当前月的第一天
-      return [date, new Date()]
+      const date = dayjs()
+      return [date.startOf('month').toDate(), date.endOf('day').toDate()]
     }
   },
   {
     text: '今年',
     value: () => {
-      const date = new Date()
-      return [new Date(`${date.getFullYear()}-01-01`), date]
+      const date = dayjs()
+      return [date.startOf('year').toDate(), date.endOf('day').toDate()]
     }
   }
 ]
 
 /**
  * 时间日期转换
- * @param date 当前时间，new Date() 格式
+ * @param date 当前时间，支持 new Date()、字符串、时间戳、dayjs 等格式
  * @param format 需要转换的时间格式字符串
  * @description format 字符串随意，如 `YYYY-MM、YYYY-MM-DD`
  * @description format 季度："YYYY-MM-DD HH:mm:ss QQQQ"
@@ -63,13 +62,32 @@ export const defaultShortcuts = [
  * @description format 季度 + 星期 + 几周："YYYY-MM-DD HH:mm:ss WWW QQQQ ZZZ"
  * @returns 返回拼接后的时间字符串
  */
-export function formatDate(date: Date, format?: string): string {
+export function formatDate(date: dayjs.ConfigType, format?: string): string {
   // 日期不存在，则返回空
   if (!date) {
     return ''
   }
   // 日期存在，则进行格式化
   return date ? dayjs(date).format(format ?? 'YYYY-MM-DD HH:mm:ss') : ''
+}
+
+/**
+ * 格式化可为空的时间日期
+ *
+ * @param date 当前时间，支持 new Date()、字符串或者时间戳格式
+ * @param format 需要转换的时间格式字符串
+ * @param emptyText 空值展示文案
+ * @returns 返回格式化后的时间字符串
+ */
+export function formatNullableDate(
+  date?: Date | string | number | null,
+  format = 'YYYY-MM-DD HH:mm:ss',
+  emptyText = '-'
+): string {
+  if (!date) {
+    return emptyText
+  }
+  return formatDate(date, format) || emptyText
 }
 
 /**
@@ -188,6 +206,20 @@ export function formatPast2(ms: number): string {
   } else {
     return 0 + ' 秒'
   }
+}
+
+/**
+ * 将秒数格式化为 mm:ss，适用于音视频时长、倒计时等
+ *
+ * @param seconds 秒数
+ */
+export function formatSeconds(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds || 0))
+  const mm = Math.floor(s / 60)
+    .toString()
+    .padStart(2, '0')
+  const ss = (s % 60).toString().padStart(2, '0')
+  return `${mm}:${ss}`
 }
 
 /**
@@ -329,4 +361,43 @@ export function getDateRange(
     dayjs(beginDate).startOf('d').format('YYYY-MM-DD HH:mm:ss'),
     dayjs(endDate).endOf('d').format('YYYY-MM-DD HH:mm:ss')
   ]
+}
+
+/**
+ * 将日期选择器的起止数组转换为左右闭合的日期时间范围
+ *
+ * @param dateRange 开始日期、结束日期
+ * @returns 开始日期零点至结束日期最后一秒；范围无效时返回 undefined
+ */
+export function getDateRangeFromArray(
+  dateRange?: dayjs.ConfigType[]
+): [string, string] | undefined {
+  if (dateRange?.length !== 2) {
+    return undefined
+  }
+  const [beginDate, endDate] = dateRange
+  if (
+    beginDate === undefined ||
+    beginDate === null ||
+    beginDate === '' ||
+    endDate === undefined ||
+    endDate === null ||
+    endDate === '' ||
+    !dayjs(beginDate).isValid() ||
+    !dayjs(endDate).isValid()
+  ) {
+    return undefined
+  }
+  return getDateRange(beginDate, endDate)
+}
+
+/**
+ * 获取指定月份的开始时间、截止时间
+ *
+ * @param month 月份
+ * @return 月初零点至月末最后一秒的闭区间
+ */
+export function getMonthRange(month: dayjs.ConfigType): [string, string] {
+  const monthDate = dayjs(month)
+  return getDateRange(monthDate.startOf('M'), monthDate.endOf('M'))
 }

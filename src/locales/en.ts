@@ -91,12 +91,19 @@ export default {
     sizeIcon: 'Size icon',
     localeIcon: 'Locale icon',
     messageIcon: 'Message icon',
+    imIcon: 'IM icon',
     tagsView: 'Tags view',
     logo: 'Logo',
     greyMode: 'Grey mode',
     fixedHeader: 'Fixed header',
     headerTheme: 'Header theme',
     cutMenu: 'Cut Menu',
+    vertical: 'Vertical',
+    twoColumn: 'Two-column',
+    horizontal: 'Horizontal',
+    headerSidebarNav: 'Sidebar nav',
+    mixedMenu: 'Mixed vertical',
+    headerTwoColumn: 'Mixed two-column',
     copy: 'Copy',
     clearAndReset: 'Clear cache and reset',
     copySuccess: 'Copy success',
@@ -133,7 +140,7 @@ export default {
     codePlaceholder: 'Please Enter Verification Code',
     mobileTitle: 'Mobile sign in',
     mobileNumber: 'Mobile Number',
-    mobileNumberPlaceholder: 'Plaease Enter Mobile Number',
+    mobileNumberPlaceholder: 'Please Enter Mobile Number',
     backLogin: 'back',
     getSmsCode: 'Get SMS Code',
     btnMobile: 'Mobile sign in',
@@ -141,9 +148,9 @@ export default {
     qrcode: 'Scan the QR code to log in',
     btnRegister: 'Sign up',
     SmsSendMsg: 'code has been sent',
-    resetPassword: "Reset Password",
-    resetPasswordSuccess: "Reset Password Success",
-    invalidTenantName:"Invalid Tenant Name"
+    resetPassword: 'Reset Password',
+    resetPasswordSuccess: 'Reset Password Success',
+    invalidTenantName: 'Invalid Tenant Name'
   },
   captcha: {
     verify: 'Verify',
@@ -436,7 +443,7 @@ export default {
       truephone: 'Please Enter The Correct Phone Number'
     },
     password: {
-      oldPassword: 'Old PassWord',
+      oldPassword: 'Old Password',
       newPassword: 'New Password',
       confirmPassword: 'Confirm Password',
       oldPwdMsg: 'Please Enter Old Password',
@@ -457,6 +464,6 @@ export default {
     btn_scale_y: 'Flip vertical',
     btn_zoom_in: 'Zoom in',
     btn_zoom_out: 'Zoom out',
-    preview: 'Preivew'
+    preview: 'Preview'
   }
 }

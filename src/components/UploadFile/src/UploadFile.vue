@@ -68,7 +68,7 @@
 </template>
 <script lang="ts" setup>
 import { propTypes } from '@/utils/propTypes'
-import type { UploadInstance, UploadProps, UploadRawFile, UploadUserFile } from 'element-plus'
+import type { UploadProps, UploadRawFile, UploadUserFile } from 'element-plus'
 import { isString } from '@/utils/is'
 import { useUpload } from '@/components/UploadFile/src/useUpload'
 import { UploadFile } from 'element-plus/es/components/upload/src/upload'
@@ -76,7 +76,7 @@ import { UploadFile } from 'element-plus/es/components/upload/src/upload'
 defineOptions({ name: 'UploadFile' })
 
 const message = useMessage() // 消息弹窗
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'update:fileSize'])
 
 const props = defineProps({
   modelValue: propTypes.oneOfType<string | string[]>([String, Array<String>]).isRequired,
@@ -91,17 +91,25 @@ const props = defineProps({
 })
 
 // ========== 上传相关 ==========
-const uploadRef = ref<UploadInstance>()
 const uploadList = ref<UploadUserFile[]>([])
 const fileList = ref<UploadUserFile[]>([])
 const uploadNumber = ref<number>(0)
 
 const { uploadUrl, httpRequest } = useUpload(props.directory)
 
+// 移除校验未通过的待上传文件
+const removeRejectedFile = (file: UploadRawFile) => {
+  const index = fileList.value.findIndex((item) => item.uid === file.uid)
+  if (index > -1) {
+    fileList.value.splice(index, 1)
+  }
+}
+
 // 文件上传之前判断
 const beforeUpload: UploadProps['beforeUpload'] = (file: UploadRawFile) => {
   if (fileList.value.length >= props.limit) {
     message.error(`上传文件数量不能超过${props.limit}个!`)
+    removeRejectedFile(file)
     return false
   }
   let fileExtension = ''
@@ -115,10 +123,12 @@ const beforeUpload: UploadProps['beforeUpload'] = (file: UploadRawFile) => {
   const isLimit = file.size < props.fileSize * 1024 * 1024
   if (!isImg) {
     message.error(`文件格式不正确, 请上传${props.fileType.join('/')}格式!`)
+    removeRejectedFile(file)
     return false
   }
   if (!isLimit) {
     message.error(`上传文件大小不能超过${props.fileSize}MB!`)
+    removeRejectedFile(file)
     return false
   }
   message.success('正在上传文件，请稍候...')
@@ -131,17 +141,22 @@ const beforeUpload: UploadProps['beforeUpload'] = (file: UploadRawFile) => {
 //   uploadRef.value.data.path = uploadFile.name
 // }
 // 文件上传成功
-const handleFileSuccess: UploadProps['onSuccess'] = (res: any): void => {
+const handleFileSuccess: UploadProps['onSuccess'] = (res: any, uploadFile): void => {
   message.success('上传成功')
+  const response = res as { data: string }
+  const fileSize = uploadFile.raw?.size
   // 删除自身
-  const index = fileList.value.findIndex((item) => item.response?.data === res.data)
+  const index = fileList.value.findIndex(
+    (item) => (item.response as { data?: string } | undefined)?.data === response.data
+  )
   fileList.value.splice(index, 1)
-  uploadList.value.push({ name: res.data, url: res.data })
+  uploadList.value.push({ name: response.data, url: response.data })
   if (uploadList.value.length == uploadNumber.value) {
     fileList.value.push(...uploadList.value)
     uploadList.value = []
     uploadNumber.value = 0
     emitUpdateModelValue()
+    emit('update:fileSize', fileSize)
   }
 }
 // 文件数超出提示
@@ -160,6 +175,7 @@ const handleRemove = (file: UploadFile) => {
   if (index > -1) {
     fileList.value.splice(index, 1)
     emitUpdateModelValue()
+    emit('update:fileSize', undefined)
   }
 }
 const handlePreview: UploadProps['onPreview'] = (uploadFile) => {

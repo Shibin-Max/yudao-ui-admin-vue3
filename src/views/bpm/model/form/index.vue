@@ -47,7 +47,7 @@
           <el-button v-if="actionType === 'update'" type="success" @click="handleDeploy">
             发 布
           </el-button>
-          <el-button type="primary" @click="handleSave">
+          <el-button type="primary" :loading="saveLoading" @click="handleSave">
             <span v-if="actionType === 'definition'">恢 复</span>
             <span v-else>保 存</span>
           </el-button>
@@ -88,7 +88,7 @@
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from '@/hooks/web/useMessage'
 import { useTagsViewStore } from '@/store/modules/tagsView'
-import { useUserStoreWithOut } from '@/store/modules/user'
+import { getCurrentUserId } from '@/utils/auth'
 import * as ModelApi from '@/api/bpm/model'
 import * as FormApi from '@/api/bpm/form'
 import { CategoryApi, CategoryVO } from '@/api/bpm/category'
@@ -107,7 +107,6 @@ const { delView } = useTagsViewStore() // 视图操作
 const tagsView = useTagsView()
 const route = useRoute()
 const message = useMessage()
-const userStore = useUserStoreWithOut()
 
 // 组件引用
 const basicInfoRef = ref()
@@ -174,7 +173,10 @@ const formData: any = ref({
     enable: false,
     summary: []
   },
-  allowWithdrawTask: false
+  allowWithdrawTask: false,
+  printTemplateSetting: {
+    enable: false
+  }
 })
 
 // 流程数据
@@ -234,7 +236,7 @@ const initData = async () => {
   } else {
     // 情况三：新增场景
     formData.value.startUserType = 0 // 全体
-    formData.value.managerUserIds.push(userStore.getUser.id)
+    formData.value.managerUserIds.push(getCurrentUserId())
   }
 
   // 获取表单列表
@@ -305,7 +307,10 @@ const validateAllSteps = async () => {
 }
 
 /** 保存操作 */
+const saveLoading = ref(false) // 保存加载中
 const handleSave = async () => {
+  if (saveLoading.value) return
+  saveLoading.value = true
   try {
     // 保存前校验所有步骤的数据
     await validateAllSteps()
@@ -344,6 +349,8 @@ const handleSave = async () => {
   } catch (error: any) {
     console.error('保存失败:', error)
     message.warning(error.message || '请完善所有步骤的必填信息')
+  } finally {
+    saveLoading.value = false
   }
 }
 

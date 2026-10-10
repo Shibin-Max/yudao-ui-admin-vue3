@@ -7,10 +7,6 @@ defineOptions({ name: 'AppView' })
 
 const appStore = useAppStore()
 
-const layout = computed(() => appStore.getLayout)
-
-const fixedHeader = computed(() => appStore.getFixedHeader)
-
 const footer = computed(() => appStore.getFooter)
 
 const tagsViewStore = useTagsViewStore()
@@ -18,8 +14,6 @@ const tagsViewStore = useTagsViewStore()
 const getCaches = computed((): string[] => {
   return tagsViewStore.getCachedViews
 })
-
-const tagsView = computed(() => appStore.getTagsView)
 
 //region 无感刷新
 const routerAlive = ref(true)
@@ -46,7 +40,7 @@ provide('reload', reload)
     <router-view v-if="routerAlive">
       <template #default="{ Component, route }">
         <keep-alive :include="getCaches">
-          <component :is="Component" :key="route.fullPath" />
+          <component :is="Component" :key="route.meta.viewKey || route.fullPath" />
         </keep-alive>
       </template>
     </router-view>

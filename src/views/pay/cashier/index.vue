@@ -142,10 +142,10 @@ const route = useRoute() // 路由
 const { push, currentRoute } = useRouter() // 路由
 const { delView } = useTagsViewStore() // 视图操作
 
-const id = ref(undefined) // 支付单号
+const id = ref<number>() // 支付单号
 const returnUrl = ref<string | undefined>(undefined) // 支付完的回调地址
 const loading = ref(false) // 支付信息的 loading
-const payOrder = ref({}) // 支付信息
+const payOrder = ref<PayOrderApi.OrderVO>({} as PayOrderApi.OrderVO) // 支付信息
 const channelsAlipay = [
   {
     name: '支付宝 PC 网站支付',
@@ -238,7 +238,6 @@ const getDetail = async () => {
     return
   }
   const data = await PayOrderApi.getOrder(id.value, true)
-  payOrder.value = data
   // 1.2 无法查询到支付信息
   if (!data) {
     message.error('支付订单不存在，请检查！')
@@ -255,6 +254,8 @@ const getDetail = async () => {
     goReturnUrl('close')
     return
   }
+  // 2. 正常展示支付信息
+  payOrder.value = data
 }
 
 /** 提交支付 */
@@ -389,6 +390,9 @@ const createQueryInterval = () => {
     return
   }
   interval.value = setInterval(async () => {
+    if (!id.value) {
+      return
+    }
     const data = await PayOrderApi.getOrder(id.value)
     // 已支付
     if (data.status === PayOrderStatusEnum.SUCCESS.status) {
@@ -453,11 +457,18 @@ const goReturnUrl = (payResult) => {
 
 /** 初始化 */
 onMounted(() => {
-  id.value = route.query.id
-  if (route.query.returnUrl) {
+  if (typeof route.query.id === 'string') {
+    id.value = Number(route.query.id)
+  }
+  if (typeof route.query.returnUrl === 'string') {
     returnUrl.value = decodeURIComponent(route.query.returnUrl)
   }
   getDetail()
+})
+
+/** 销毁 */
+onBeforeUnmount(() => {
+  clearQueryInterval()
 })
 </script>
 

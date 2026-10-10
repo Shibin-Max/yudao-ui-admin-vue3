@@ -11,13 +11,22 @@ const props = defineProps({
   modelValue: propTypes.bool.def(false),
   title: propTypes.string.def('Dialog'),
   fullscreen: propTypes.bool.def(true),
+  defaultFullscreen: propTypes.bool.def(false),
   width: propTypes.oneOfType([String, Number]).def('40%'),
   scroll: propTypes.bool.def(false), // 是否开启滚动条。如果是的话，按照 maxHeight 设置最大高度
-  maxHeight: propTypes.oneOfType([String, Number]).def('400px')
+  maxHeight: propTypes.oneOfType([String, Number]).def('400px'),
+  loading: propTypes.bool.def(false)
 })
 
 const getBindValue = computed(() => {
-  const delArr: string[] = ['fullscreen', 'title', 'maxHeight', 'appendToBody']
+  const delArr: string[] = [
+    'fullscreen',
+    'defaultFullscreen',
+    'title',
+    'maxHeight',
+    'appendToBody',
+    'loading'
+  ]
   const attrs = useAttrs()
   const obj = { ...attrs, ...props }
   for (const key in obj) {
@@ -28,7 +37,16 @@ const getBindValue = computed(() => {
   return obj
 })
 
-const isFullscreen = ref(false)
+const isFullscreen = ref(props.defaultFullscreen)
+
+watch(
+  () => props.modelValue,
+  (visible) => {
+    if (visible) {
+      isFullscreen.value = props.defaultFullscreen
+    }
+  }
+)
 
 const toggleFull = () => {
   isFullscreen.value = !unref(isFullscreen)
@@ -111,10 +129,14 @@ function closedHandler() {
       </div>
     </template>
 
-    <ElScrollbar v-if="scroll" :style="dialogStyle">
-      <slot></slot>
-    </ElScrollbar>
-    <slot v-else></slot>
+    <div v-loading="loading" :style="loading ? { minHeight: '120px' } : undefined">
+      <template v-if="!loading">
+        <ElScrollbar v-if="scroll" :style="dialogStyle">
+          <slot></slot>
+        </ElScrollbar>
+        <slot v-else></slot>
+      </template>
+    </div>
     <template v-if="slots.footer" #footer>
       <div :style="{ 'pointer-events': closing ? 'none' : 'auto' }">
         <slot name="footer"></slot>

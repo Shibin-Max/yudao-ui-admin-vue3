@@ -38,6 +38,14 @@
         </el-button>
       </template>
     </el-table-column>
+    <el-table-column align="center" label="附件/签名" min-width="180">
+      <template #default="scope">
+        <TaskEvidenceCell
+          :attachments="scope.row.attachments"
+          :sign-pic-url="scope.row.signPicUrl"
+        />
+      </template>
+    </el-table-column>
     <el-table-column align="center" label="耗时" prop="durationInMillis" min-width="100">
       <template #default="scope">
         {{ formatPast2(scope.row.durationInMillis) }}
@@ -48,7 +56,7 @@
   <!-- 弹窗：表单 -->
   <Dialog title="表单详情" v-model="taskFormVisible" width="600">
     <form-create
-      ref="fApi"
+      v-model:api="fApi"
       v-model="taskForm.value"
       :option="taskForm.option"
       :rule="taskForm.rule"
@@ -59,9 +67,10 @@
 import { dateFormatter, formatPast2 } from '@/utils/formatTime'
 import { propTypes } from '@/utils/propTypes'
 import { DICT_TYPE } from '@/utils/dict'
-import type { ApiAttrs } from '@form-create/element-ui/types/config'
+import type { Api as FormCreateApi } from '@form-create/element-ui'
 import { setConfAndFields2 } from '@/utils/formCreate'
 import * as TaskApi from '@/api/bpm/task'
+import TaskEvidenceCell from '@/views/bpm/task/components/TaskEvidenceCell.vue'
 
 defineOptions({ name: 'BpmProcessInstanceTaskList' })
 
@@ -72,7 +81,7 @@ const props = defineProps({
 const tasks = ref([]) // 流程任务的数组
 
 /** 查看表单 */
-const fApi = ref<ApiAttrs>() // form-create 的 API 操作类
+const fApi = ref<FormCreateApi>() // form-create 的 API 操作类
 const taskForm = ref({
   rule: [],
   option: {},
@@ -86,9 +95,9 @@ const handleFormDetail = async (row: any) => {
   taskFormVisible.value = true
   // 隐藏提交、重置按钮，设置禁用只读
   await nextTick()
-  fApi.value.fapi.btn.show(false)
-  fApi.value?.fapi?.resetBtn.show(false)
-  fApi.value?.fapi?.disabled(true)
+  fApi.value?.btn.show(false)
+  fApi.value?.resetBtn.show(false)
+  fApi.value?.disabled(true)
 }
 
 /** 只有 loading 完成时，才去加载流程列表 */

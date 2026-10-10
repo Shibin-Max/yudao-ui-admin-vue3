@@ -51,7 +51,7 @@
           v-model="queryParams.customerId"
           clearable
           filterable
-          placeholder="请选择供客户"
+          placeholder="请选择客户"
           class="!w-240px"
         >
           <el-option
@@ -252,7 +252,6 @@ import { StockOutApi, StockOutVO } from '@/api/erp/stock/out'
 import StockOutForm from './StockOutForm.vue'
 import { ProductApi, ProductVO } from '@/api/erp/product/product'
 import { WarehouseApi, WarehouseVO } from '@/api/erp/stock/warehouse'
-import { SupplierApi, SupplierVO } from '@/api/erp/purchase/supplier'
 import { UserVO } from '@/api/system/user'
 import * as UserApi from '@/api/system/user'
 import { erpCountTableColumnFormatter, erpPriceTableColumnFormatter } from '@/utils'

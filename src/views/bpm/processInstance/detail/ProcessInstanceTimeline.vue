@@ -129,24 +129,17 @@
             </div>
             <teleport defer :to="`#activity-task-${activity.id}-${index}`">
               <div
-                v-if="
-                  task.reason &&
-                  [NodeType.USER_TASK_NODE, NodeType.END_EVENT_NODE].includes(activity.nodeType)
-                "
+                v-if="shouldShowTaskEvidence(task, activity.nodeType, index)"
                 class="text-#a5a5a5 text-13px mt-1 w-full bg-#f8f8fa p2 rounded-md"
               >
-                <!-- TODO lesan：这里如果是办理，需要是办理意见 -->
-                审批意见：{{ task.reason }}
-              </div>
-              <div
-                v-if="task.signPicUrl && activity.nodeType === NodeType.USER_TASK_NODE"
-                class="text-#a5a5a5 text-13px mt-1 w-full bg-#f8f8fa p2 rounded-md"
-              >
-                签名：
-                <el-image
-                  class="w-90px h-40px ml-5px"
-                  :src="task.signPicUrl"
-                  :preview-src-list="[task.signPicUrl]"
+                <div v-if="task.reason">
+                  {{ getTaskEvidenceReasonLabel(activity.nodeType) }}：{{ task.reason }}
+                </div>
+                <TaskEvidenceCell
+                  v-if="task.attachments?.length || task.signPicUrl"
+                  class="mt-2 !justify-start"
+                  :attachments="task.attachments"
+                  :sign-pic-url="task.signPicUrl"
                 />
               </div>
             </teleport>
@@ -188,6 +181,7 @@ import { TaskStatusEnum } from '@/api/bpm/task'
 import { NodeType, CandidateStrategy } from '@/components/SimpleProcessDesignerV2/src/consts'
 import { isEmpty } from '@/utils/is'
 import { Check, Close, Loading, Clock, Minus, Delete, ArrowDown } from '@element-plus/icons-vue'
+import TaskEvidenceCell from '@/views/bpm/task/components/TaskEvidenceCell.vue'
 import starterSvg from '@/assets/svgs/bpm/starter.svg'
 import auditorSvg from '@/assets/svgs/bpm/auditor.svg'
 import copySvg from '@/assets/svgs/bpm/copy.svg'
@@ -314,6 +308,27 @@ const getApprovalNodeTime = (node: ProcessInstanceApi.ApprovalNodeInfo) => {
   if (node.startTime) {
     return `${formatDate(node.startTime)}`
   }
+}
+
+/** 是否展示审批意见、附件和签名 */
+const shouldShowTaskEvidence = (
+  task: ProcessInstanceApi.ApprovalTaskInfo,
+  nodeType: NodeType,
+  nodeIndex: number
+) => {
+  // 第一个发起人节点系统自动通过的，不展示审批意见
+  if (nodeType === NodeType.START_USER_NODE && nodeIndex === 0) {
+    return false
+  }
+  return (
+    Boolean(task.reason || task.attachments?.length || task.signPicUrl) &&
+    [NodeType.START_USER_NODE, NodeType.USER_TASK_NODE, NodeType.TRANSACTOR_NODE].includes(nodeType)
+  )
+}
+
+/** 获取任务留痕意见标题 */
+const getTaskEvidenceReasonLabel = (nodeType: NodeType) => {
+  return nodeType === NodeType.TRANSACTOR_NODE ? '办理意见' : '审批意见'
 }
 
 // 选择自定义审批人

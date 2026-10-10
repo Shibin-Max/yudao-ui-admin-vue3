@@ -10,8 +10,8 @@
       <InputPassword v-model="password.confirmPassword" strength />
     </el-form-item>
     <el-form-item>
-      <XButton :title="t('common.save')" type="primary" @click="submit(formRef)" />
-      <XButton :title="t('common.reset')" type="danger" @click="reset(formRef)" />
+      <el-button type="primary" @click="submit(formRef)">{{ t('common.save') }}</el-button>
+      <el-button type="danger" @click="reset(formRef)">{{ t('common.reset') }}</el-button>
     </el-form-item>
   </el-form>
 </template>
@@ -33,22 +33,21 @@ const password = reactive({
 })
 
 // 表单校验
-const equalToPassword = (_rule, value, callback) => {
+const equalToPassword = (_rule, value) => {
   if (password.newPassword !== value) {
-    callback(new Error(t('profile.password.diffPwd')))
-  } else {
-    callback()
+    return Promise.reject(new Error(t('profile.password.diffPwd')))
   }
+  return Promise.resolve()
 }
 
 const rules = reactive<FormRules>({
   oldPassword: [
     { required: true, message: t('profile.password.oldPwdMsg'), trigger: 'blur' },
-    { min: 6, max: 20, message: t('profile.password.pwdRules'), trigger: 'blur' }
+    { min: 4, max: 16, message: t('profile.password.pwdRules'), trigger: 'blur' }
   ],
   newPassword: [
     { required: true, message: t('profile.password.newPwdMsg'), trigger: 'blur' },
-    { min: 6, max: 20, message: t('profile.password.pwdRules'), trigger: 'blur' }
+    { min: 4, max: 16, message: t('profile.password.pwdRules'), trigger: 'blur' }
   ],
   confirmPassword: [
     { required: true, message: t('profile.password.cfPwdMsg'), trigger: 'blur' },

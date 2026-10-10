@@ -51,7 +51,7 @@
           v-model="queryParams.customerId"
           clearable
           filterable
-          placeholder="请选择供客户"
+          placeholder="请选择客户"
           class="!w-240px"
         >
           <el-option
@@ -334,6 +334,7 @@ const queryParams = reactive({
   customerId: undefined,
   productId: undefined,
   warehouseId: undefined,
+  outTime: [],
   returnTime: [],
   orderNo: undefined,
   accountId: undefined,
